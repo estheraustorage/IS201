@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #042c3c;
+      color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .game {
+      text-align: center;
+    }
+
+    .board {
+      display: grid;
+      grid-template-rows: repeat(6, 1fr);
+      gap: 5px;
+      margin-bottom: 20px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 5px;
+    }
+
+    .tile {
+      width: 60px;
+      height: 60px;
+      border: 2px solid #3a3a3c;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 2rem;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .correct {
+      background: #538d4e;
+      border-color: #538d4e;
+    }
+
+    .present {
+      background: #b59f3b;
+      border-color: #b59f3b;
+    }
+
+    .absent {
+      background: #3a3a3c;
+      border-color: #3a3a3c;
+    }
+
+    .message {
+      margin-top: 10px;
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+    
+    <div style="
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px;">
+      <a href="index.html" style="color: white; text-decoration: none; font-size: 1.1rem;">
+        Home
+      </a> |
+        <a href="scratch.html" style="color: white; text-decoration: none; font-size: 1.1rem;">Travel</a>
+    </div>
+
+    <div>
+      <div class="game">
+        <h1>Wordle Clone</h1>
+        <div class="board" id="board"></div>
+        <div class="message" id="message"></div>
+      </div>
+
+      <script>
+        const WORDS = ["APPLE", "BRAVE", "CRANE", "HOUSE", "PLANT"];
+        const ANSWER = WORDS[Math.floor(Math.random() * WORDS.length)];
+        const ROWS = 6;
+        const COLS = 5;
+
+        let currentRow = 0;
+        let currentCol = 0;
+        let board = [];
+
+        const boardElement = document.getElementById("board");
+        const messageElement = document.getElementById("message");
+
+        // Initialize board
+        for (let r = 0; r < ROWS; r++) {
+          const row = [];
+          const rowDiv = document.createElement("div");
+          rowDiv.className = "row";
+
+          for (let c = 0; c < COLS; c++) {
+            const tile = document.createElement("div");
+            tile.className = "tile";
+            rowDiv.appendChild(tile);
+            row.push(tile);
+          }
+
+          board.push(row);
+          boardElement.appendChild(rowDiv);
+        }
+
+        document.addEventListener("keydown", handleKey);
+
+        function handleKey(e) {
+          if (currentRow >= ROWS) return;
+
+          if (e.key === "Backspace") {
+            deleteLetter();
+          } else if (e.key === "Enter") {
+            submitGuess();
+          } else if (/^[a-zA-Z]$/.test(e.key)) {
+            addLetter(e.key.toUpperCase());
+          }
+        }
+
+        function addLetter(letter) {
+          if (currentCol < COLS) {
+            board[currentRow][currentCol].textContent = letter;
+            currentCol++;
+          }
+        }
+
+        function deleteLetter() {
+          if (currentCol > 0) {
+            currentCol--;
+            board[currentRow][currentCol].textContent = "";
+          }
+        }
+
+        function submitGuess() {
+          if (currentCol < COLS) {
+            showMessage("Not enough letters");
+            return;
+          }
+
+          const guess = board[currentRow]
+            .map(tile => tile.textContent)
+            .join("");
+
+          evaluateGuess(guess);
+
+          if (guess === ANSWER) {
+            showMessage("🎉 You Win!");
+            currentRow = ROWS;
+            return;
+          }
+
+          currentRow++;
+          currentCol = 0;
+
+          if (currentRow === ROWS) {
+            showMessage(`Game Over! The word was ${ANSWER}`);
+          }
+        }
+
+        function evaluateGuess(guess) {
+          const answerLetters = ANSWER.split("");
+
+          // First pass: correct
+          for (let i = 0; i < COLS; i++) {
+            if (guess[i] === answerLetters[i]) {
+              board[currentRow][i].classList.add("correct");
+              answerLetters[i] = null;
+            }
+          }
+
+          // Second pass: present / absent
+          for (let i = 0; i < COLS; i++) {
+            if (board[currentRow][i].classList.contains("correct")) continue;
+
+            const index = answerLetters.indexOf(guess[i]);
+            if (index !== -1) {
+              board[currentRow][i].classList.add("present");
+              answerLetters[index] = null;
+            } else {
+              board[currentRow][i].classList.add("absent");
+            }
+          }
+        }
+
+        function showMessage(text) {
+          messageElement.textContent = text;
+        }
+      </script>
+    </div>
+</body>
+</html>
